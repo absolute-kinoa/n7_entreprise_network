@@ -45,7 +45,6 @@ Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau
 3/ routeur
 - reseau pub
 - reseau priv
-- default bridgé avec l'hôte
 
 
 ## Configuration files for networks purposes
@@ -123,3 +122,13 @@ Le VM priv car possède une adresse privée + règle de firewall ?
 ### 3.1
 Les paquets sortants du LAN privé passeront par le routeur où le NATING s'effectuera. Le routeur NAT translatera l'adresse privé source par une adresse publique en sortie d'interface. 
 ### 3.2 
+
+## Partie 4 - Mise en place de la sécurité
+### 4.1
+N'ouvrir que les ports TCP/UDP + http/https + arp + icmp entrant sur la DMZ
+sortie -> osef ?
+
+Les paquets entrant sur le routeur seront reject pour plus de lisibilité ?
+
+## Partie 5 - DHCP
+indiquer le DNS (ici on utilisera GOOGLE puis on remplacera par un serveur BIND sur la meme machine)
