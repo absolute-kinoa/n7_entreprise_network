@@ -105,7 +105,7 @@ ajout d'une regle de forwarding `iptables -P FORWARD ACCEPT`
 ## Partie 2 - Interconnexion avec le monde 
 
 ### 2.1 
-Ajout d'une route default sur le routeur
+Pas besoin de route
 ### 2.2 
 Le VM priv car possède une adresse privée + règle de firewall ?
 
@@ -114,6 +114,8 @@ Le VM priv car possède une adresse privée + règle de firewall ?
 **SUR LE ROUTEUR**
 
 - Activer le NAT sur le routeur `iptables -t nat -A POSTROUTING -o enp0s9 -j MASQUERADE` (interface de sortie vers internet)
+
+- redirection des requetes http vers la DMZ `iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to 100.7.2.2:80`
 
 - Sauvegarde des règles `iptables-save > /etc/iptables-rules.save` 
 
