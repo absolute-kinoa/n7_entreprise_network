@@ -58,7 +58,8 @@ iface lo inet loopback
 
 # The primary network interface
 iface enp0s8 inet static
-    address 100.7.2.2/24
+    address 100.7.2.2
+    mask 255.255.255.0
     gateway 100.7.2.1
 ```
 
@@ -75,9 +76,7 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
-iface enp0s8 inet static
-    address 192.168.1.2/24
-    gateway 192.168.1.1/24
+iface enp0s8 inet dhcp
 
 ```
 ### Router's config
@@ -90,11 +89,18 @@ iface lo inet loopback
 
 # The primary network interface
 iface enp0s3 inet static
-    address 192.168.1.1/24
+    address 192.168.1.1
+    mask 255.255.255.0
+
 
 iface enp0s8 inet static
-    address 100.7.2.2/24
+    address 100.7.2.2
+    mask 255.255.255.0
 
+iface enp0s9 inet static
+    address 100.7.0.155
+    mask 255.255.255.0
+    # gateway ?
 ```
 
 activation du mode router en décommentant la ligne `net.ipv4.ip_forward=1 ` du fichier `/etc/sysctl.conf`.
@@ -109,6 +115,8 @@ Pas besoin de route
 ### 2.2 
 Le VM priv car possède une adresse privée + règle de firewall ?
 
+---
+Gateway ou utilisation du dnat
 
 ## Partie 3 - Communication du réseau privé avec les serveurs web
 **SUR LE ROUTEUR**
@@ -117,9 +125,8 @@ Le VM priv car possède une adresse privée + règle de firewall ?
 
 - redirection des requetes http vers la DMZ `iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to 100.7.2.2:80`
 
-- Sauvegarde des règles `iptables-save > /etc/iptables-rules.save` 
-
-- Persistance après redémarrage `post-up iptables-restore < /etc/iptables-rules.save`
+- installation de iptables-persistent `sudo apt-get install iptables-persistent`
+- sauvegarde des règles `iptables-save > /etc/iptables/rules.v4`
 
 ### 3.1
 Les paquets sortants du LAN privé passeront par le routeur où le NATING s'effectuera. Le routeur NAT translatera l'adresse privé source par une adresse publique en sortie d'interface. 
@@ -134,3 +141,34 @@ Les paquets entrant sur le routeur seront reject pour plus de lisibilité ?
 
 ## Partie 5 - DHCP
 indiquer le DNS (ici on utilisera GOOGLE puis on remplacera par un serveur BIND sur la meme machine)
+### 5.1
+Il faut renseigner la plage d'IP utilisables pour l'attribution et le masque du sous-réseau.
+
+### 5.2
+Le client envoie un DHCPDISCOVER sur le network afin de découvrir un serveur DHCP.
+Ce dernier renvoie une offre d'adresse IP via un DHCPOFFER.
+Client envoie un DHCPREQUEST
+puis un DHCPACK est envoyé par le serveur pour confirmer l'attribution de l'adresse.
+
+---
+
+On utilisera ici l'outil dnsmasq afin de paramétrer rapidement le service de DHCP. Il est également utilisable comme dns mais nous n'allons pas l'utiliser ainsi.
+Le paramétrage se fait dans le fichier `/etc/dnsmasq.conf`
+```bash
+
+```
+
+### 5.3
+
+## Partie 6 - Mise en place d'un proxy web
+### 6.1 
+Un serveur proxy est un serveur web qui agit comme une passerelle entre une application client
+
+### 6.2
+```
+
+```
+
+### 6.3
+
+
