@@ -1,4 +1,7 @@
 # Mise en place d'un réseau d'entreprise
+
+![Architecture du réseaux](images/Architecture_reseau.png)
+
 **Requirements:**
 - Debian
 
