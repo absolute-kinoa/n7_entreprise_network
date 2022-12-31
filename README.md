@@ -30,7 +30,7 @@ root:root
 
 ## Partie 1 - Mise en place du réseau sur les VMs
 ### **Q1.1 Faut-il mettre en place du NAT pour la communication entre la DMZ et le réseau privé ? Pourquoi ?**
-Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau privé. De la sorte il est plus difficile d'identifier les différentes machines du réseau privé.
+Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau privé. De la sorte il est plus difficile d'identifier les différentes machines du réseau privé. Cependant, il n'est pas nécessaire du mettre du NAT entre le réseau privé et la DMZ, cer ceux-ci étant réliés au même routeur, il suffira de faire des régles de pare-feu.
 
 ### **Q1.2 Décrire l’enchainement des messages d’une communication entre un client Web et un serveur de la DMZ. ? Quelles sont les caractéristiques de la communication ? Quelles sont les étapes de la communication ? Que manque-t’il par rapport à un cas classique ? (chez vous par exemple)**
 - ARP, TCP connexion, HTTP 
@@ -39,9 +39,8 @@ Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau
 - il manque protocole SSL/TLS (vérification de certificat), résolution de nom 
 
 ### **Q1.3 Quelles sont les routes d’une machine du réseau privé ? du serveur de la DMZ ? du routeur ?**
-1/ machine privé 2 route :
-- default -> gateway
-- réseau privé
+1/ machine privé:
+- default -> gateway sur le routeur
 
 2/ DMZ : 
 - default -> gateway
