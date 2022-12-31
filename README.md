@@ -20,6 +20,7 @@ e-priv| 192.168.1.2 | 192.168.1.0/25
 
 e-router| 192.168.1.1 & 100.7.2.1 | both
 
+Un membre de notre équipe étant malade, certaines configurations ont été faites sans lui, et il se peut que dans certains fichiers de configuration il manque des routes vers son réseau en conséquence.
 
 ## Credentials :
 eric:eric
@@ -30,7 +31,7 @@ root:root
 
 ## Partie 1 - Mise en place du réseau sur les VMs
 ### **Q1.1 Faut-il mettre en place du NAT pour la communication entre la DMZ et le réseau privé ? Pourquoi ?**
-Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau privé. De la sorte il est plus difficile d'identifier les différentes machines du réseau privé. Cependant, il n'est pas nécessaire du mettre du NAT entre le réseau privé et la DMZ, cer ceux-ci étant réliés au même routeur, il suffira de faire des régles de pare-feu.
+Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau privé. De la sorte il est plus difficile d'identifier les différentes machines du réseau privé. Cependant, il n'est pas nécessaire du mettre du NAT entre le réseau privé et la DMZ, car ceux-ci étant réliés au même routeur, il suffira de faire des régles de pare-feu.
 
 ### **Q1.2 Décrire l’enchainement des messages d’une communication entre un client Web et un serveur de la DMZ. ? Quelles sont les caractéristiques de la communication ? Quelles sont les étapes de la communication ? Que manque-t’il par rapport à un cas classique ? (chez vous par exemple)**
 - ARP, TCP connexion, HTTP 
@@ -43,12 +44,10 @@ Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau
 - default -> gateway sur le routeur
 
 2/ DMZ : 
-- default -> gateway
-- reseau public
+- default -> gateway sur le routeur
 
 3/ routeur
-- reseau pub
-- reseau priv
+Il suffit d'activer l'IP forwarding
 
 ## Configuration files for networks purposes
 ### Pub's /etc/network/interfaces
@@ -123,8 +122,8 @@ Il est possible de ne pas rajouter de route en utilisant du DNAT sur les routeur
 Si l'on souhaite utiliser des routes, il faudra sur chaque routeur ajouter les routes vers les adresses réseaux des différentes DMZ en passant par leur routeur respectif.
 
 ### **2.2 - Qu’est-ce qui ne communique pas avec le reste du monde et pourquoi** ?
-<br/>
-<br/>
+
+Dans les deux cas, les reseaux privés ne pourront pas communiquer, étant donné que leurs routes ne seront pas connues.
 
 ---
 
@@ -149,9 +148,7 @@ Les paquets sortants du LAN privé passeront par le routeur où le NATING s'effe
 ## Partie 4 - Mise en place de la sécurité
 ### **4.1 - Comment mettre en place les règles pour permettre les communications web entrantes sur la DMZ venant de l’extérieur? Expliquez les règles à mettre en place.**
 N'ouvrir que les ports TCP/UDP + http/https + arp + icmp entrant sur la DMZ
-sortie -> osef ?
-
-Les paquets entrant sur le routeur seront reject pour plus de lisibilité ?
+On autorise la DMZ uniquement les réponse a des requêtes, de ce fait elle ne pourra rien initier, et juste renvoyer des réponses.
 
 ### **4.2 - En quoi l’état d’une connexion TCP peut nous être utile pour le filtrage ?**
 <br/>
@@ -165,7 +162,7 @@ Les paquets entrant sur le routeur seront reject pour plus de lisibilité ?
 Il faut renseigner la plage d'IP utilisables pour l'attribution et le masque du sous-réseau.
 
 ### **5.2 - Expliquez le fonctionnement de DHCP.**
-Le client envoie un DHCPDISCOVER sur le network afin de découvrir un serveur DHCP.
+Le client envoie en broadcast un DHCPDISCOVER sur le network afin de découvrir un serveur DHCP.
 Ce dernier renvoie une offre d'adresse IP via un DHCPOFFER.
 Client envoie un DHCPREQUEST
 puis un DHCPACK est envoyé par le serveur pour confirmer l'attribution de l'adresse.
@@ -204,5 +201,19 @@ Un proxy web transparent ne nécessite pas de configurer les postes clients. Tou
 ### **7.2 - Un système de nommage par dépendant des FAIs est-il une bonne solution pour des réseaux d’entreprises ? Une autre solution est-elle possible ? Pourquoi ?**
 
 
+## Nos choix
 
+- Nous avons décidé que nos trois sous-reseaux feraient partie du même réseau, afin de faciliter l'interconnexion et n'utiliser qu'un switch. Nous avions le réseau 100.7.0.0/24.
+
+- Pour le routeur, nous avons utilisé une machie virtuelle classique, afin de mieux comprendre comment faire en sorte qu'une machine virtuelle agisse comme un routeur.
+ 
+- Concernant les règles de pare-feu, nous sommes parties sur la base de tout rejeter, et d'ensuite uniquement accepter ce que nous voulions
+
+- Nous avons choisi de mettre les serveurs DNS et DHCP sur le routeur directement, pour faciliter les configurations et l'accès aux données.
+
+## Nos difficultés
+
+- Notre plus grosse difficulté a été dans l'installation du DNS, précisement, le forwarding. En effet, nous avions réussit à avoir notre DNS qui marchait correctement dans notre zone, mais nous avons eu du mal à accèder aux zones des autres réseaux.
+
+- Nous avons essayé de configurer un proxy mais sans succès.
 
