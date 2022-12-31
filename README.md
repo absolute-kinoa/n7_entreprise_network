@@ -2,30 +2,9 @@
 
 ![Architecture du réseaux](images/Architecture_reseau.png)
 
-**Requirements:**
-- Debian
+Ce projet s'agit de la mise en place d'un réseau d'entreprise. Notre équipe est composé de trois membres : Quentin, Enzo et Eric. Ce document rend compte des manipulations et choix technologiques effectués. L'ensemble des configurations précises des machines est disponible dans le dossier ***images/\<nom\>-config***.
 
-3 machines:
-pub, priv, router
-pub & priv have 2 interfaces
-router have 3 intefaces : 
-1 
-
-
-machine | @IP | @IP_res
-
-e-pub | 100.7.2.2 | 100.7.2.0/25
-
-e-priv| 192.168.1.2 | 192.168.1.0/25
-
-e-router| 192.168.1.1 & 100.7.2.1 | both
-
-Un membre de notre équipe étant malade, certaines configurations ont été faites sans lui, et il se peut que dans certains fichiers de configuration il manque des routes vers son réseau en conséquence.
-
-## Credentials :
-eric:eric
-
-root:root
+**Remarque :** Un membre de notre équipe étant malade, certaines configurations ont été faites sans lui, et il se peut que dans certains fichiers de configuration il manque des routes vers son réseau en conséquence.
 
 ---
 
@@ -37,7 +16,7 @@ Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau
 - ARP, TCP connexion, HTTP 
 - Non sécurisé
 - Connexion TCP
-- il manque protocole SSL/TLS (vérification de certificat), résolution de nom 
+- il manque protocole SSL/TLS (vérification de certificat), résolution de nom.
 
 ### **Q1.3 Quelles sont les routes d’une machine du réseau privé ? du serveur de la DMZ ? du routeur ?**
 1/ machine privé:
@@ -49,7 +28,7 @@ Il est utile de mettre en place le NAT afin de cacher les adresses IP du réseau
 3/ routeur
 Il suffit d'activer l'IP forwarding
 
-## Configuration files for networks purposes
+## Fichiers de configuration - Exemple Eric
 ### Pub's /etc/network/interfaces
 ```bash
 source /etc/network/interfaces.d/*
@@ -59,6 +38,7 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
+auto enp0s8
 iface enp0s8 inet static
     address 100.7.2.2
     mask 255.255.255.0
@@ -90,18 +70,20 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
+auto enp0s3
 iface enp0s3 inet static
     address 192.168.1.1
     mask 255.255.255.0
 
+auto enp0s8
 iface enp0s8 inet static
     address 100.7.2.2
     mask 255.255.255.0
 
+auto enp0s9
 iface enp0s9 inet static
     address 100.7.0.155
     mask 255.255.255.0
-    # gateway ?
 ```
 
 activation du mode router en décommentant la ligne `net.ipv4.ip_forward=1 ` du fichier `/etc/sysctl.conf`.
@@ -130,11 +112,14 @@ Dans les deux cas, les reseaux privés ne pourront pas communiquer, étant donn�
 ## Partie 3 - Communication du réseau privé avec les serveurs web
 **SUR LE ROUTEUR**
 
+On utilisera comme firewall iptables ainsi qu'iptables-persistent pour sauvegarder la configuration. Ci-dessous, certaines commandes utilisées pour mettre en place certaines règles.
+
 - Activer le NAT sur le routeur `iptables -t nat -A POSTROUTING -o enp0s9 -j MASQUERADE` (interface de sortie vers internet)
 
 - redirection des requetes http vers la DMZ `iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to 100.7.2.2:80`
 
 - installation de iptables-persistent `sudo apt-get install iptables-persistent`
+  
 - sauvegarde des règles `iptables-save > /etc/iptables/rules.v4`
 
 ### **3.1 - Expliquez comment fonctionne le NAT sur une machine Linux.**
@@ -147,10 +132,16 @@ Les paquets sortants du LAN privé passeront par le routeur où le NATING s'effe
 
 ## Partie 4 - Mise en place de la sécurité
 ### **4.1 - Comment mettre en place les règles pour permettre les communications web entrantes sur la DMZ venant de l’extérieur? Expliquez les règles à mettre en place.**
-N'ouvrir que les ports TCP/UDP + http/https + arp + icmp entrant sur la DMZ
-On autorise la DMZ uniquement les réponse a des requêtes, de ce fait elle ne pourra rien initier, et juste renvoyer des réponses.
+
+Afin de sécuriser flux, il sera nécessaire de mettre en place un pare-feu qui pourra filtrer les différents échanges entre les réseaux. Nous allons ici n'autoriser que les communications des protocoles utilisées sur le réseau et sur les équipements spécifiques. Notamment : le http (et eventuellement le https)- entrant sur les serveurs apaches, le http sortant des clients privés et enfin les requêtes DNS et DHCP sur les routeurs.
+
+![exemple des règles firewall d'un des routeur ](images/eric-config/yu_iptables-persistent_rules.png)
+
+
 
 ### **4.2 - En quoi l’état d’une connexion TCP peut nous être utile pour le filtrage ?**
+En filtrant à partir de l'état de connexion TCP, moins de règles seront requises pour autoriser les différents échanges. Il suffit d'autoriser l'état ESTABLISHED et RELATED puis d'indiquer des règles d'autorisation pour les nouvelles connexions TCP uniquement.
+
 <br/>
 <br/>
 
@@ -167,11 +158,9 @@ Ce dernier renvoie une offre d'adresse IP via un DHCPOFFER.
 Client envoie un DHCPREQUEST
 puis un DHCPACK est envoyé par le serveur pour confirmer l'attribution de l'adresse.
 
-On utilisera ici l'outil dnsmasq afin de paramétrer rapidement le service de DHCP. Il est également utilisable comme dns mais nous n'allons pas l'utiliser ainsi.
+On pourra par exemple utiliser l'outil dnsmasq afin de paramétrer rapidement le service de DHCP. Il est également utilisable comme dns mais nous n'allons pas l'utiliser ainsi.
 Le paramétrage se fait dans le fichier `/etc/dnsmasq.conf`
-```bash
-
-```
+![](images/eric-config/yu_dnsmasq_config.png)
 
 ### **5.3 - En quoi ce protocole présente-t’il un danger ?**
 <br/>
@@ -200,6 +189,10 @@ Un proxy web transparent ne nécessite pas de configurer les postes clients. Tou
 
 ### **7.2 - Un système de nommage par dépendant des FAIs est-il une bonne solution pour des réseaux d’entreprises ? Une autre solution est-elle possible ? Pourquoi ?**
 
+<br/>
+<br/>
+
+---
 
 ## Nos choix
 
